@@ -1,0 +1,58 @@
+name:
+    pulse
+version:
+    0.1.0.0
+homepage:
+    https://github.com/YellowDogDingo/pulse
+license:
+    BSD3
+license-file:
+    LICENSE
+author:
+    Thomas Bates
+maintainer:
+    me@tom-bates.co.uk
+build-type:
+    Simple
+cabal-version:
+    >= 2.0
+
+executable pulse
+    main-is:
+        Pulse.hs
+    default-language:
+        Haskell2010
+    hs-source-dirs:
+        src
+    build-depends:
+    default-extensions:
+        ConstraintKinds
+        DataKinds
+        DefaultSignatures
+        DeriveFoldable
+        DeriveFunctor
+        DeriveTraversable
+        DisambiguateRecordFields
+        DuplicateRecordFields
+        EmptyCase
+        ExistentialQuantification
+        FlexibleContexts
+        FlexibleInstances
+        GADTs
+        InstanceSigs
+        KindSignatures
+        LambdaCase
+        MultiParamTypeClasses
+        PatternSynonyms
+        RankNTypes
+        ScopedTypeVariables
+        StandaloneDeriving
+        TupleSections
+        TypeApplications
+        TypeFamilies
+        TypeFamilyDependencies
+        TypeOperators
+        UnicodeSyntax
+    ghc-options:
+        -dynamic
+        -threaded
