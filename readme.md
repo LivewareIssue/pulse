@@ -1,6 +1,8 @@
 # pulse
 
-vector/matrix import naming convention:  
+Rhythm game demonstrating the feasibility of functional-reactive games
+
+## vector/matrix import naming convention:  
   
 import qualified Data.Vector as Unsized.Vector  
 import qualified Data.Vector.Generic as Generic.Unsized.Vector  
