@@ -61,49 +61,49 @@ module Data.Matrix.Generic (
     instance (Traversable (v m), Traversable (v n)) ⇒ Traversable (Matrix v m n) where
         traverse f (Matrix p) = (Matrix . getCompose) <$> (traverse f (Compose p))
 
-    -- where vectors are finite cartesian product
-    type family FreeVectorSpace (v ∷ Nat → Type → Type) (m ∷ Nat) a ∷ Constraint where
-        FreeVectorSpace v m a = (
+    -- where vectors are finite cartesian products over a ring
+    type family CoordinateSpace (v ∷ Nat → Type → Type) (m ∷ Nat) a ∷ Constraint where
+        CoordinateSpace v m a = (
                 FiniteRep v m,
                 Applicative (v m),
                 Foldable (v m),
-                VectorSpace a,
+                Ring a,
                 VectorSpace (v m a),
-                Scalar (v m a) ~ Scalar a
+                Scalar (v m a) ~ a
             )
 
     type family FiniteRep (f ∷ Nat → Type → Type) (m ∷ Nat) ∷ Constraint where
         FiniteRep f m = (Representable (f m), Rep (f m) ~ Finite m)
 
-    instance (FreeVectorSpace v m a, Ring a, Ring (Scalar a)) ⇒ AdditiveGroup (Matrix v m m a) where
+    instance (CoordinateSpace v m a) ⇒ AdditiveGroup (Matrix v m m a) where
         zeroV = null
         (^+^) = (!+!)
-        negateV p = ((negateV oneV) *^) <$> p
+        negateV p = ((negateV oneV) ^*^) <$> p
 
-    instance (FreeVectorSpace v m a, Ring a, a ~ Scalar a) ⇒ Ring (Matrix v m m a) where
+    instance (CoordinateSpace v m a) ⇒ Ring (Matrix v m m a) where
         oneV = identity
         (^*^) = (!*!)
 
-    instance (FreeVectorSpace v m a, Ring a, Ring (Scalar a)) ⇒ VectorSpace (Matrix v m m a) where
-        type Scalar (Matrix v m m a) = Scalar a
-        s *^ p = (s *^) <$> p
+    instance (CoordinateSpace v m a) ⇒ VectorSpace (Matrix v m m a) where
+        type Scalar (Matrix v m m a) = a
+        s *^ p = (s ^*^) <$> p
 
-    instance (FreeVectorSpace v m a, Ring a, a ~ Scalar a) ⇒ Semigroup (Matrix v m m a) where
+    instance (CoordinateSpace v m a) ⇒ Semigroup (Matrix v m m a) where
         (<>) = (^*^)
 
-    instance (FreeVectorSpace v m a, Ring a, a ~ Scalar a) ⇒ Monoid (Matrix v m m a) where
+    instance (CoordinateSpace v m a) ⇒ Monoid (Matrix v m m a) where
         mempty = identity
 
     infixl 6 !+!
-    (!+!) ∷ (FreeVectorSpace v m a, AdditiveGroup (v n a), Ring a, Ring (Scalar a)) ⇒ Matrix v m n a → Matrix v m n a → Matrix v m n a
+    (!+!) ∷ (CoordinateSpace v m a, AdditiveGroup (v n a)) ⇒ Matrix v m n a → Matrix v m n a → Matrix v m n a
     Matrix p !+! Matrix q = Matrix $! liftA2 (^+^) p q
 
     infixl 6 !-!
-    (!-!) ∷ (FreeVectorSpace v m a, AdditiveGroup (v n a), Ring a, Ring (Scalar a)) ⇒ Matrix v m n a → Matrix v m n a → Matrix v m n a
+    (!-!) ∷ (CoordinateSpace v m a, AdditiveGroup (v n a)) ⇒ Matrix v m n a → Matrix v m n a → Matrix v m n a
     Matrix p !-! Matrix q = Matrix $! liftA2 (^-^) p q
 
     infixl 7 !*!
-    (!*!) ∷ (FreeVectorSpace v m a, FreeVectorSpace v n a, FreeVectorSpace v p a, Ring a, a ~ Scalar a) ⇒ Matrix v m n a → Matrix v n p a → Matrix v m p a
+    (!*!) ∷ (CoordinateSpace v m a, CoordinateSpace v n a, CoordinateSpace v p a) ⇒ Matrix v m n a → Matrix v n p a → Matrix v m p a
     Matrix p !*! Matrix q = Matrix $! fmap (\r → foldl' (^+^) zeroV $ liftA2 (*^) r q) p
 
     infixl 7 !*
@@ -113,16 +113,16 @@ module Data.Matrix.Generic (
     convert ∷ (Functor v, Generic.Unsized.Vector v a, Generic.Unsized.Vector v (Generic.Sized.Vector w n a), Generic.Unsized.Vector w a, Generic.Unsized.Vector w (Generic.Sized.Vector w n a)) ⇒ Matrix (Generic.Sized.Vector v) m n a → Matrix (Generic.Sized.Vector w) m n a
     convert (Matrix p) = Matrix $! Generic.Sized.convert $ Generic.Sized.convert <$> p
 
-    null ∷ (FreeVectorSpace v m a, Ring a, Ring (Scalar a)) ⇒ Matrix v m m a
+    null ∷ CoordinateSpace v m a ⇒ Matrix v m m a
     null = tabulate $ const zeroV
 
-    identity ∷ (FreeVectorSpace v m a, Ring a, a ~ Scalar a) ⇒ Matrix v m m a
+    identity ∷ CoordinateSpace v m a ⇒ Matrix v m m a
     identity = tabulate $ \(i,j) → if (i `Finite.equals` j) then oneV else zeroV
 
     transpose ∷ (Distributive (v n), Functor (v m), KnownNat m, KnownNat n) ⇒ Matrix v m n a → Matrix v n m a
     transpose (Matrix p) = Matrix $! distribute p
 
-    scale ∷ (FreeVectorSpace v i a, Ring a, a ~ Scalar a) ⇒ a → Matrix v i i a
+    scale ∷ CoordinateSpace v i a ⇒ a → Matrix v i i a
     scale s = s *^ identity
 
     frustum ∷ (FiniteRep v 4, Field a) ⇒ a → a → a → a → a → a → Matrix v 4 4 a
